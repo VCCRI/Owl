@@ -34,7 +34,7 @@ and type:
 sudo python setup.py install
 
 3.	Download owl 
-Git clone ______________________
+Git clone https://github.com/VCCRI/Owl.git
 
 
 ### Mac:
@@ -68,7 +68,7 @@ and type:
 sudo python setup.py install
 
 3.	Download owl 
-Git clone ______________________
+Git clone https://github.com/VCCRI/Owl.git
 
 ### Windows:
 
@@ -130,6 +130,6 @@ A third alternative utilising the visual studio gui is outlined http://simpleela
 
 
 3.	Owl 
-Git clone ______________________
+Git clone https://github.com/VCCRI/Owl.git
 
 
