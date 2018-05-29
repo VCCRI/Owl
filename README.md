@@ -135,12 +135,12 @@ Git clone https://github.com/VCCRI/Owl.git
 
 ## Usage 
 
-### Single Image 
+#### Single Image 
 
 python owl.py --file SampleImage
 
 
-### 3D Stack 
+#### 3D Stack 
 
 python owl.py --folder SampleFolder 
 
