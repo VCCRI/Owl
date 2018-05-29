@@ -133,3 +133,7 @@ A third alternative utilising the visual studio gui is outlined http://simpleela
 Git clone https://github.com/VCCRI/Owl.git
 
 
+## Usage 
+
+python owl.py --file SampleImage
+
