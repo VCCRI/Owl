@@ -13,10 +13,10 @@ When two images undergo im age registration, they are compared and a similarity 
 1.	Installing Prox_TV 
 Detailed installation instructions can be found at:  https://github.com/albarji/proxTV 
 
-sudo apt install cmake 
-sudo pip install numpy scipy scikit-image cffi 
-sudo apt-get install liblapacke-dev
-sudo pip install prox-tv	
+sudo apt install cmake  
+sudo pip install numpy scipy scikit-image cffi  
+sudo apt-get install liblapacke-dev  
+sudo pip install prox-tv	 
 
 2.	Installing Simple Elastix 
 
