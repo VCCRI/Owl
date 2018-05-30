@@ -1,6 +1,6 @@
 # User Requirements Check 
 
-#### __ Input 2D Images __
+#### Input 2D Images
 
 As a bioinformatician, I want to input an image directly into the application so that I can utilise this denoising application on all my datasets.   
 
