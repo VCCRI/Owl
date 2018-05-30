@@ -41,7 +41,9 @@ The above command will manually set the lambda value as 0.1.
 As a bioinformatician, I want to be able to manually select the "best" output image, so that I can produce results that meet my needs. 
 
 ##### Demonstration Command
-`Dear Vivian, you need to fix this - the function has been created but not implemented` 
+`python owl.py --file demo.png --manualIteration --iterationlambda 0.1`
+
+After typing this command, you will be prompted with multiple questions to allow for manual iteration. For example "Are you happy?" "Would you like to denoise more or less". Iterationlambda is the value that denoising will begin. This parameter is option for the manual iteration method.  
 
 
 #### Pairwise Automation Method 
