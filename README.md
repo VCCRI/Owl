@@ -1,5 +1,4 @@
-![Owl](/images/owl.png)
-<img style="float: right;" src="/images/owl.jpg">
+
 # Owl
 
 Owl is an automated denoising application utilising ITV Algorithm and Image Registration. 
