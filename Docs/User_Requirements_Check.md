@@ -97,8 +97,9 @@ As a bioinformatician, I want to be able to display the automation graphs, so th
 
 ##### Demonstration Command 
 
-`python owl.py --DO THIS`
+`python owl.py --file demo.png --showGraph`
 
+The above command will demonstrate the appropriate automation graphs. 
 
 #### Input 3D Image Series 
 As a bioinformatician, I want to be able to input a series of images directly into the pipeline, so that I can utilise this application to denoise 3D images.
