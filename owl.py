@@ -35,10 +35,7 @@ types = {'png': 'png', 'tiff': 'tif', 'jpeg': 'jpg'}
 
 #File Input 
 def input(filename):
-	
-	print ("Welcome to VDT: Vivian's Denoising Thing")
-	print("You would like to denoise " + filename)	
-	
+		
 	#Define a path to the current working directory
 	here = os.path.dirname(os.path.abspath(__file__))
 
@@ -65,8 +62,10 @@ def input(filename):
 	#Read Image 
 	X = io.imread(filepath)
 
-	#Convert to float for processing 
-	X = ski.img_as_float(X)
+	#Convert to float for processing
+	with warnings.catch_warnings():
+		warnings.simplefilter("ignore") 
+		X = ski.img_as_float(X)
 	#X = color.rgb2gray(X)
 
 	return X 
@@ -186,24 +185,22 @@ def denoiseAutomated(inputFile):
 
 def denoiseAutomatedOriginal(inputFile):
 	print("Start Original Method of Automated Denoising")
-
 	fileToDenoise = inputFile
 	previousFile = inputFile
 	original = "hello"
-
 	for x in np.arange(args.startscope,args.endscope,args.increment):
-
-		print x
 
 		step = denoiseManual(fileToDenoise,x)
 		name = "Temporary" + str(x) + ".png"
 
-		io.imsave(str(name), step)
+		with warnings.catch_warnings():
+			warnings.simplefilter("ignore")
+			io.imsave(str(name), step)
 
 		images.append(name)
 		if x == 0:
 			original = name 
-
+		
 		register(name, original)
 
 
@@ -224,7 +221,9 @@ def denoiseAutomatedPairWise(inputFile):
 
 		print("Saving the file name", str(current))
 
-		io.imsave(str(current), step)
+		with warnings.catch_warnings():
+			warnings.simplefilter("ignore")
+			io.imsave(str(current), step)
 
 		images.append(current)
 
@@ -268,7 +267,10 @@ def showFile(file):
 
 	#You need to save the image you want to see 
 
-	io.imsave(str(outname), out)
+	with warnings.catch_warnings():
+		warnings.simplefilter("ignore")
+
+		io.imsave(str(outname), out)
 	
 
 	name = "showFile" #+ str(number)
@@ -303,24 +305,24 @@ def showFile(file):
 	#plt.show()
 
 
-def openFile(filename):
+def openFile(filenameNew, filenameOriginal):
 
 	print("Open file function!")
 	
 
 	name = "Denoised File" #+ str(number)
-	img = cv2.imread(filename,0)
+	img = cv2.imread(filenameNew,0)
 	imS = cv2.resize(img, (700, 760))  
 	cv2.namedWindow(name, cv2.WINDOW_NORMAL)
-	cv2.moveWindow(name, 05,20);
+	cv2.moveWindow(name, 710,20);
 	cv2.imshow(name,imS)
 	#cv2.waitKey(0) #closes after a key press 
 	#cv2.destroyAllWindows()
 
-	imgOriginal = cv2.imread(args.file,0)
+	imgOriginal = cv2.imread(filenameOriginal,0)
 	imOriginal = cv2.resize(imgOriginal,(700,760))
 	cv2.namedWindow('original image', cv2.WINDOW_NORMAL)
-	cv2.moveWindow('original image', 710,20)
+	cv2.moveWindow('original image', 05,20)
 	cv2.imshow('original image', imOriginal)
 	cv2.waitKey(0)
 	cv2.destroyAllWindows()
@@ -376,7 +378,9 @@ def output(outputFile):
 	
 	outname = outfileName()
 
-	io.imsave(str(outname), out)
+	with warnings.catch_warnings():
+		warnings.simplefilter("ignore")
+		io.imsave(str(outname), out)
 
 
 def outfileName(file):
@@ -414,7 +418,9 @@ def getFileType (filename):
 def saveFileFinal(outfilename, filename):
 	fileToSave = input2(outfilename)
 	newFileName = "Denoised_" + filename 
-	io.imsave(newFileName, fileToSave)
+	with warnings.catch_warnings():
+		warnings.simplefilter("ignore")
+		io.imsave(newFileName, fileToSave)
 
 	#pass
 
@@ -488,17 +494,28 @@ if __name__ == "__main__":
 	parser.add_argument("--folder", help = "The folder containing the files you want to denoise")
 	parser.add_argument("--lamb", help ="The lambda value for denoising", type = float)
 	parser.add_argument('--outfiletype', help = "The output file type", type = checkfiletype)
-	parser.add_argument('--showfile', help = "Display the end result denoised file", type = checkTrue)
+	parser.add_argument('--showfile', help = "Display the end result denoised file", action = 'store_true')
 	parser.add_argument('--automationmethod', help = "Select either pairwise or original registration", type = checkRegistration)
-	parser.add_argument('--confirmfirst', help = "Confirm the automation before proceeding with the whole file", type = checkTrue)
+	#parser.add_argument('--confirmfirst', help = "Confirm the automation before proceeding with the whole file", type = checkTrue)
+
+	parser.add_argument('--confirmfirst', help = "Confirm the automation before proceeding with the whole file", action = 'store_true')
 	parser.add_argument('--startscope', help = "The point to begin denoising", type = float, default = 0.00)
-	parser.add_argument('--endscope', help ="The point to end denoising", type = float, default = 0.12)
+	parser.add_argument('--endscope', help ="The point to end denoising", type = float, default = 0.20)
 	parser.add_argument('--increment', help ="The increment between denoising iterations", type = float, default = 0.05)
 	parser.add_argument('--specifyfile', help ="To specify a start file to obtain the lambda value in an unskewed way", type = checkFile)
-	
+	parser.add_argument('--demo', help = "Run a demo version of the program", action = 'store_true')
 
 	args = parser.parse_args()
 
+	if args.demo: 
+		print("Entering Demonstration Program")
+		demoFile = "demo.png"
+		newfile = input(demoFile)
+		denoiseAutomated(newfile)
+		fileIndex = calculateBest()	
+		saveFileFinal(images[fileIndex], demoFile)
+		openFile(images[fileIndex], demoFile)
+		exit(0)
 	#Create a show graphs thing 
 	#print(args.showfile)
 
@@ -515,7 +532,10 @@ if __name__ == "__main__":
 
 		pass
 	else:
-		print("Please select either a file or a folder to submit")
+		print("Please select either a file or a folder to submit. ")
+		print("You can do that with the --file or --folder flag")
+		print("Alternatively, you can type python owl.py --demo for a demo run!")
+		exit(1)
 		#Denoising a sample image 
 
 
@@ -541,8 +561,6 @@ if __name__ == "__main__":
 					fileIndex = calculateBest()
 					lambdaValue = args.increment * int(fileIndex)
 
-					#Let's see. 
-
 
 					plt.plot(metrics,'ro')
 					plt.show()
@@ -552,7 +570,9 @@ if __name__ == "__main__":
 						iterationfile = input2(images[fileIndex])
 						manitfile = denoiseManualIteration(iterationfile,lambdaValue)
 						newFileName = "Denoised_" + filename 
-						io.imsave(newFileName, manitfile)
+						with warnings.catch_warnings():
+							warnings.simplefilter("ignore")
+							io.imsave(newFileName, manitfile)
 
 					else:
 						saveFileFinal(images[fileIndex], filename)
@@ -601,15 +621,11 @@ if __name__ == "__main__":
 			saveFileFinal(images[fileIndex], args.file)
 
 			if args.showfile == "T":
-				openFile(images[fileIndex])
+				openFile(images[fileIndex], args.file)
 
 			plt.plot(metrics,'ro')
 			plt.show()
-		
-			f = open('datafull.csv','a')
-			data = images[fileIndex] + '\t' + args.file + '\n'
-			f.write(data)
-			f.close()
+	
 			
 
 
