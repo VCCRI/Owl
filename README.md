@@ -135,6 +135,9 @@ Git clone https://github.com/VCCRI/Owl.git
 
 ## Usage 
 
+Try a demonstration run!  
+python owl.py --demo 
+
 #### Single Image 
 
 python owl.py --file SampleImage  
