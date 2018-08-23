@@ -5,6 +5,7 @@ import os
 import skimage as ski
 from skimage import io, color, util, img_as_uint
 import imghdr
+from matplotlib import pyplot as plt
 import matplotlib.pyplot as plt
 import time 
 import prox_tv as ptv
@@ -13,13 +14,15 @@ from PIL import Image
 import argparse
 import cv2
 import SimpleITK as sitk
+import sys
+import os
 from math import pi
 from numpy import diff
 import glob
 import numpy as np
 import re 
 import subprocess
-
+from math import factorial
 
 
 metrics = list() 
@@ -50,7 +53,8 @@ def input(filename):
 	#If the filetype has not been tested for compatabilitiy program will exit. 
 
 	if filetype in types:
-		print("Your file type is compatible")
+		#print("Your file type is compatible")
+		pass
 	else:
 		print("Your file type is not compatible yet, sorry!")
 		exit(1)
@@ -62,27 +66,37 @@ def input(filename):
 	with warnings.catch_warnings():
 		warnings.simplefilter("ignore") 
 		X = ski.img_as_float(X)
+		X = color.rgb2gray(X)
+
+
 	return X 
 #Input file function to be used during 3D slice batch processing
 def input2(filename):
-	#Define a path to the given file 
+	#Define a path to the current working directory
 	here = os.path.dirname(os.path.abspath(__file__))
+
 	filepath = here + "/" + filename 
-	#Determine the filetype 
+
 	filetype = imghdr.what(filepath)
-	#Read the image 
 	X = io.imread(filepath)
 
-	#Check file compatability 
 	if filetype in types:
-		print("Your file type is compatible")
+		#print("Your file type is compatible")
+		pass
 	else:
 		print("Your file type is not compatible yet, sorry!")
 
 	X = ski.img_as_float(X)
+	X = color.rgb2gray(X)
 
 	return X 
-
+def command_iteration(method) :
+    #if (method.GetOptimizerIteration()==0):
+    #    print("Scales: ", method.GetOptimizerScales())
+    #print("{0:3} = {1:7.5f} : {2}".format(method.GetOptimizerIteration(),
+                                           #method.GetMetricValue(),
+                                           #method.GetOptimizerPosition()))
+	pass
 def register(moving, fixed): 
 
 
@@ -121,10 +135,17 @@ def register(moving, fixed):
 	tx = sitk.CenteredTransformInitializer(moving, fixed, tx)
 	R.SetInitialTransform(tx)
 	R.SetInterpolator(sitk.sitkLinear)
+	#R.AddCommand( sitk.sitkIterationEvent, lambda: command_iteration(R) )
 	outTx = R.Execute(moving,fixed)
+	#print("-------")
+	#print(outTx)
+	#print("Optimizer stop condition: {0}".format(R.GetOptimizerStopConditionDescription()))
+	#print(" Iteration: {0}".format(R.GetOptimizerIteration()))
+	#print(" Metric value: {0}".format(R.GetMetricValue()))
 	metrics.append(abs(R.GetMetricValue()))
 	end = time.time()
 
+	print('Time to Register ' + str(end-start))
 #Denoises a given file, based off specified lambda 
 #Determined by user. 
 def denoise (inputFile):
@@ -137,19 +158,19 @@ def denoise (inputFile):
 
 	end = time.time()
 
-	#print('Time to denoise ' + str(end-start))
+	print('Time to denoise ' + str(end-start))
 	return F 
-
 #Denoises a given file, based of specified lambda value
 def denoiseManual(inputFile,lamb):
 
+
 	start = time.time()
 
-	F = ptv.tv1_2d(inputFile, lamb,1 ,3)
+	F = ptv.tv1_2d(inputFile, lamb,1,2)
 
 	end = time.time()
 
-	#print('Time to denoise ' + str(end-start))
+	print('Time to denoise ' + str(end-start))
 
 	return F 
 
@@ -169,6 +190,7 @@ def denoiseAutomatedOriginal(inputFile):
 	fileToDenoise = inputFile
 	previousFile = inputFile
 	original = "hello"
+	count = 0 
 	for x in np.arange(args.startscope,args.endscope,args.increment):
 
 		step = denoiseManual(fileToDenoise,x)
@@ -179,10 +201,11 @@ def denoiseAutomatedOriginal(inputFile):
 			io.imsave(str(name), step)
 
 		images.append(name)
-		if x == 0:
+		if count == 0:
 			original = name 
 		
 		register(name, original)
+		count = count + 1
 
 def denoiseAutomatedPairWise(inputFile):
 	print("Starting Pairwise method of Automated Denoising...")
@@ -208,40 +231,42 @@ def denoiseAutomatedPairWise(inputFile):
 
 		prevx = x 
 
+def calculateBest(metricsx):
 
-def calculateBest():
-
-	dif=np.diff(metrics)
+	dif=np.diff(metricsx)
 	dif2=np.diff(dif)
 	
 	fn=True
+	fa = True 
 	for k,i in enumerate(dif2):
+		#print(k)
+		if i>0:
+			if not fn: 
+				fa = False 
 		if i<0:
-			if not fn:
-				if ((k+1) > 3):
-					break
+			#print("Reaching correct", k)
+			if not fn and not fa: 
+				break 
 				
-
 			fn=False
-
+	#print("k is: ", k)
 	return (k)
 
 def showFile(file):
 
 	print("Show file function!")
 
-
 	with warnings.catch_warnings():
 		warnings.simplefilter("ignore")
 		out = img_as_uint(file)
 	
-
 	if args.file: 
+	
 		outname = outfileName(args.file)
 	else: 
 		outname = "hello.png"
 
-	#Save the image in order to view the file without distortion 
+	#You need to save the image you want to see 
 
 	with warnings.catch_warnings():
 		warnings.simplefilter("ignore")
@@ -249,7 +274,7 @@ def showFile(file):
 		io.imsave(str(outname), out)
 	
 
-	name = "showFile" 
+	name = "showFile" #+ str(number)
 	img = cv2.imread(str(outname),0)
 	imS = cv2.resize(img, (700, 760))  
 	cv2.namedWindow(name, cv2.WINDOW_NORMAL)
@@ -264,13 +289,14 @@ def openFile(filenameNew, filenameOriginal):
 	print("Open file function!")
 	
 
-	name = "Denoised File"
+	name = "Denoised File" #+ str(number)
 	img = cv2.imread(filenameNew,0)
 	imS = cv2.resize(img, (700, 760))  
 	cv2.namedWindow(name, cv2.WINDOW_NORMAL)
 	cv2.moveWindow(name, 710,20);
 	cv2.imshow(name,imS)
-
+	#cv2.waitKey(0) #closes after a key press 
+	#cv2.destroyAllWindows()
 
 	imgOriginal = cv2.imread(filenameOriginal,0)
 	imOriginal = cv2.resize(imgOriginal,(700,760))
@@ -282,30 +308,39 @@ def openFile(filenameNew, filenameOriginal):
 
 def denoiseManualIteration(inputFile):
 
+	#Change this so only one question is asked - makes it easier. 
+
+	#Maybe we could display on a scale?
+
+	#We should create another value - manual or lambda 
+
 	if args.iterationlambda:
 		lamb = args.iterationlambda
 	else: 
 		lamb = 0.5
 
 
-	userIsNotHappy = True 	
+	userIsNotHappy = True 
+	
 	image = inputFile
-
+	#showFile(inputFile)
 
 	while userIsNotHappy:
+		print("Denoising with lambda value", lamb)
 		image = denoiseManual(inputFile, lamb)
 		showFile(image)
+		#showFile(inputFile)
 		happiness = raw_input("Are you happy though? ")
 
-		if happiness == "Yes":
+		if happiness == "yes":
 			userIsNotHappy = False
 		else:
 			userIsNotHappy = True
 			moreOrLess = raw_input("Would you like to denoise more or less? ")
 			if moreOrLess == "more":
-				lamb = lamb + 0.01
+				lamb = lamb + float(args.increment)
 			else:
-				lamb = lamb - 0.01
+				lamb = lamb - float(args.increment) 
 				if lamb < 0:
 					lamb = 0
 					print("Minimum lambda value reached")
@@ -313,7 +348,6 @@ def denoiseManualIteration(inputFile):
 
 
 	return image
-
 #File Output
 def output(outputFile):
 
@@ -327,7 +361,6 @@ def output(outputFile):
 		warnings.simplefilter("ignore")
 		io.imsave(str(outname), out)
 
-
 def outfileName(file):
 
 	filetype = getFileType(file)
@@ -337,14 +370,12 @@ def outfileName(file):
 
 	return outfileName 
 
-
 def filetypeConversions(filetype):
 
 	if args.outfiletype: 
 		return types[args.outfiletype]
 	else: 
 		return types[filetype]
-
 
 def getFileType (filename):
 
@@ -364,7 +395,6 @@ def getFileType (filename):
 	return filetype 
 
 def saveFileFinal(outfilename, filename):
-
 	fileToSave = input2(outfilename)	
 	newFileName = "Denoised_" + filename 
 	if args.outfiletype:
@@ -402,15 +432,38 @@ def checkFile(filename):
 	else: 
 		raise argparse.ArgumentTypeError("Not a valid file")
 
+def savitzky_golay(y, window_size, order, deriv=0, rate=1):
+
+	try:
+	    window_size = np.abs(np.int(window_size))
+	    order = np.abs(np.int(order))
+	except ValueError, msg:
+	    raise ValueError("window_size and order have to be of type int")
+	if window_size % 2 != 1 or window_size < 1:
+	    raise TypeError("window_size size must be a positive odd number")
+	if window_size < order + 2:
+	    raise TypeError("window_size is too small for the polynomials order")
+	order_range = range(order+1)
+	half_window = (window_size -1) // 2
+	# precompute coefficients
+	b = np.mat([[k**i for i in order_range] for k in range(-half_window, half_window+1)])
+	m = np.linalg.pinv(b).A[deriv] * rate**deriv * factorial(deriv)
+	# pad the signal at the extremes with
+	# values taken from the signal itself
+	firstvals = y[0] - np.abs( y[1:half_window+1][::-1] - y[0] )
+	lastvals = y[-1] + np.abs(y[-half_window-1:-1][::-1] - y[-1])
+	y = np.concatenate((firstvals, y, lastvals))
+	return np.convolve( m[::-1], y, mode='valid')
+
+
 #A function to display the graph produced by automated denoising 
 def showGraph(metrics,fileIndex):
 
-	plt.plot(metrics,'ro')
+	plt.plot(metrics, "bo")
 	plt.title('Automated Denoising Graph')
 	plt.ylabel('Metric')
 	plt.xlabel('Iteration of Denoising')
 	plt.show()
-
 
 def checkRegistration(registrationoption):
 
@@ -433,10 +486,31 @@ def dicom_to_array(filename):
 	a = d.pixel_array
 	return np.array(a)
 
+def demo():
+
+	# Load image
+	here = os.path.dirname(os.path.abspath(__file__))
+	X = io.imread(here + '/small.png')
+	X = ski.img_as_float(X)
+	X = color.rgb2gray(X)
+
+	# Filter using 2D TV-L1
+	lam=0.005;
+	print('Filtering image with 2D TV-L1...')
+	start = time.time()
+	F = ptv.tv1_2d(X, lam,1,3)
+	end = time.time()
+	print('Elapsed time ' + str(end-start))
+	io.imshow(X)
+	plt.show()
+	
+	io.imshow(F)
+	plt.show()
+
+
 
 #Run
 if __name__ == "__main__":
-
 
 	start = time.time()
 
@@ -449,9 +523,9 @@ if __name__ == "__main__":
 	parser.add_argument('--automationmethod', help = "Select either pairwise or original registration", type = checkRegistration)
 	#parser.add_argument('--confirmfirst', help = "Confirm the automation before proceeding with the whole file", type = checkTrue)
 	parser.add_argument('--confirmfirst', help = "Confirm the automation before proceeding with the whole file", action = 'store_true')
-	parser.add_argument('--startscope', help = "The point to begin denoising", type = float, default = 0.00)
-	parser.add_argument('--endscope', help ="The point to end denoising", type = float, default = 0.15)
-	parser.add_argument('--increment', help ="The increment between denoising iterations", type = float, default = 0.05)
+	parser.add_argument('--startscope', help = "The point to begin denoising", type = float, default = 0.0)
+	parser.add_argument('--endscope', help ="The point to end denoising", type = float, default = 0.04)
+	parser.add_argument('--increment', help ="The increment between denoising iterations", type = float, default = 0.003)
 	parser.add_argument('--specifyfile', help ="To specify a start file to obtain the lambda value in an unskewed way", type = checkFile)
 	parser.add_argument('--demo', help = "Run a demo version of the program", action = 'store_true')
 	parser.add_argument('--manualIteration', help = "To manually iterate through and select the best image", action = 'store_true')
@@ -459,7 +533,6 @@ if __name__ == "__main__":
 	parser.add_argument('--showGraph', help = "Display the automation graphs", action = 'store_true')
 	args = parser.parse_args()
 
-	defaultfiletype = ".png"
 
 	if args.demo: 
 		print("Entering Demonstration Program")
@@ -484,6 +557,7 @@ if __name__ == "__main__":
 		if args.lamb:
 
 			denoisedFile = denoiseManual(newfile, args.lamb)
+
 			#Move this into function 
 			savefilename = "Denoised_" + args.file
 			with warnings.catch_warnings():
@@ -493,6 +567,8 @@ if __name__ == "__main__":
 			if args.showfile:
 				showFile(denoisedFile)
 			print("Manual Denoising of one file completed!")
+
+			#demo()
 			exit(0)
 
 
@@ -513,7 +589,10 @@ if __name__ == "__main__":
 
 		else: 
 			denoiseAutomated(newfile)
-			fileIndex = calculateBest()	
+			fileIndex = calculateBest(metrics)	
+
+			print("The lambda value selected is:", int(fileIndex) * float(args.increment))
+
 			saveFileFinal(images[fileIndex], args.file)
 
 			if args.showfile:
@@ -523,6 +602,10 @@ if __name__ == "__main__":
 				showGraph(metrics,fileIndex)
 
 			print("Automated Denoising for one file completed!")
+
+		for fileDelete in images:
+					os.remove(fileDelete)
+
 
 
 
@@ -535,11 +618,12 @@ if __name__ == "__main__":
 
 		for filename in os.listdir(givenFolder):
 
-			if filename.endswith(defaultfiletype):
+			#Change this to the filetype that thing is. 
+			if filename.endswith(".png"):
 				newfile = input(filename)
 				if obtainedLambda is False: 
 					denoiseAutomated(newfile)
-					fileIndex = calculateBest()
+					fileIndex = calculateBest(metrics)
 					lambdaValue = args.increment * int(fileIndex)
 
 					if args.showGraph:
@@ -578,4 +662,5 @@ if __name__ == "__main__":
 		print("You can do that with the --file or --folder flag")
 		print("Alternatively, you can type python owl.py --demo for a demo run!")
 		exit(1)
+		#Denoising a sample image 
 
