@@ -5,8 +5,8 @@ import os
 import skimage as ski
 from skimage import io, color, util, img_as_uint
 import imghdr
-from matplotlib import pyplot as plt
 import matplotlib.pyplot as plt
+matplotlib.use('Agg')
 import time 
 import prox_tv as ptv
 import warnings
