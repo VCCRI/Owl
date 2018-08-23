@@ -34,6 +34,7 @@ types = {'png': 'png', 'tiff': 'tif', 'jpeg': 'jpg', 'dicom':'dcm'}
 #A dictionary of common file conversions 
 
 #Given a file name this function will return an np.array representation of this image 
+#Gets the file ready for denoising 
 def input(filename):
 		
 	#Define a path to the current working directory
@@ -63,13 +64,16 @@ def input(filename):
 	X = io.imread(filepath)
 
 	#Convert to float for processing
+	#Do not remove this 
 	with warnings.catch_warnings():
 		warnings.simplefilter("ignore") 
 		X = ski.img_as_float(X)
+		#Denoising will not be effective if image is not converted from rbg2gray
 		X = color.rgb2gray(X)
 
 
 	return X 
+
 #Input file function to be used during 3D slice batch processing
 def input2(filename):
 	#Define a path to the current working directory
@@ -90,6 +94,8 @@ def input2(filename):
 	X = color.rgb2gray(X)
 
 	return X 
+
+#Not relevan 
 def command_iteration(method) :
     #if (method.GetOptimizerIteration()==0):
     #    print("Scales: ", method.GetOptimizerScales())
@@ -97,6 +103,10 @@ def command_iteration(method) :
                                            #method.GetMetricValue(),
                                            #method.GetOptimizerPosition()))
 	pass
+
+#Function that completes image registration 
+#Providing two images, and producing similarity metric 
+#moving is the denoised, fixed is original with noise. 
 def register(moving, fixed): 
 
 
@@ -137,15 +147,12 @@ def register(moving, fixed):
 	R.SetInterpolator(sitk.sitkLinear)
 	#R.AddCommand( sitk.sitkIterationEvent, lambda: command_iteration(R) )
 	outTx = R.Execute(moving,fixed)
-	#print("-------")
-	#print(outTx)
-	#print("Optimizer stop condition: {0}".format(R.GetOptimizerStopConditionDescription()))
-	#print(" Iteration: {0}".format(R.GetOptimizerIteration()))
-	#print(" Metric value: {0}".format(R.GetMetricValue()))
 	metrics.append(abs(R.GetMetricValue()))
 	end = time.time()
 
 	print('Time to Register ' + str(end-start))
+	
+	
 #Denoises a given file, based off specified lambda 
 #Determined by user. 
 def denoise (inputFile):
@@ -153,19 +160,24 @@ def denoise (inputFile):
 	print("Starting denoising")
 
 	start = time.time()
-
+	
+	#Specify the number of threads used for denoising 
 	F = ptv.tv1_2d(inputFile, args.lamb,1,3)
 
 	end = time.time()
 
 	print('Time to denoise ' + str(end-start))
 	return F 
+
 #Denoises a given file, based of specified lambda value
 def denoiseManual(inputFile,lamb):
 
 
 	start = time.time()
-
+	
+	
+	
+	#Specify the number of threads used for denoising 
 	F = ptv.tv1_2d(inputFile, lamb,1,2)
 
 	end = time.time()
@@ -525,7 +537,7 @@ if __name__ == "__main__":
 	parser.add_argument('--confirmfirst', help = "Confirm the automation before proceeding with the whole file", action = 'store_true')
 	parser.add_argument('--startscope', help = "The point to begin denoising", type = float, default = 0.0)
 	parser.add_argument('--endscope', help ="The point to end denoising", type = float, default = 0.15)
-	parser.add_argument('--increment', help ="The increment between denoising iterations", type = float, default = 0.003)
+	parser.add_argument('--increment', help ="The increment between denoising iterations", type = float, default = 0.01)
 	parser.add_argument('--specifyfile', help ="To specify a start file to obtain the lambda value in an unskewed way", type = checkFile)
 	parser.add_argument('--demo', help = "Run a demo version of the program", action = 'store_true')
 	parser.add_argument('--manualIteration', help = "To manually iterate through and select the best image", action = 'store_true')
