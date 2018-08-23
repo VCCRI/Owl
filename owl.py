@@ -524,7 +524,7 @@ if __name__ == "__main__":
 	#parser.add_argument('--confirmfirst', help = "Confirm the automation before proceeding with the whole file", type = checkTrue)
 	parser.add_argument('--confirmfirst', help = "Confirm the automation before proceeding with the whole file", action = 'store_true')
 	parser.add_argument('--startscope', help = "The point to begin denoising", type = float, default = 0.0)
-	parser.add_argument('--endscope', help ="The point to end denoising", type = float, default = 0.04)
+	parser.add_argument('--endscope', help ="The point to end denoising", type = float, default = 0.15)
 	parser.add_argument('--increment', help ="The increment between denoising iterations", type = float, default = 0.003)
 	parser.add_argument('--specifyfile', help ="To specify a start file to obtain the lambda value in an unskewed way", type = checkFile)
 	parser.add_argument('--demo', help = "Run a demo version of the program", action = 'store_true')
